@@ -3,7 +3,7 @@
  * @date: 2021/1/12
  */
 
-package persis
+package inmem_persis
 
 import (
 	"actor-playground/core/persistence"

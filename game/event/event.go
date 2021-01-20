@@ -5,8 +5,11 @@
 
 package event
 
+// 英雄Power已升级
 type HeroPowerUpdated struct {
-	HeroId string
+	HeroId   string
+	OldPower int
+	NewPower int
 }
 
 // 角色名称已经变更

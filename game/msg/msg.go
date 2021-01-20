@@ -5,60 +5,54 @@
 
 package msg
 
-type Message interface {
-	private()
-}
-
-type MessageBase struct{}
-
-func (m MessageBase) private() {}
+import "actor-playground/core"
 
 // 添加角色经验
 type AddRoleExp struct {
-	MessageBase
+	core.MessageBase
 	Exp int
 }
 
 // 提升英雄等级
 type UpgradeHeroLv struct {
-	MessageBase
+	core.MessageBase
 	HeroId string
 	AddLv  int
 }
 
 // 注册角色
 type RegisterRoleRequest struct {
-	MessageBase
+	core.MessageBase
 	Name   string //昵称
 	Sex    uint8  // 性别：1男2女
 	Avatar int    // 形象编号
 }
 
 type RegisterRoleResponse struct {
-	MessageBase
+	core.MessageBase
 	IsSuccess bool
 	Err       error
 }
 
 type UnlockHeroRequest struct {
-	MessageBase
+	core.MessageBase
 	RoleId string
 	No     int
 }
 type UnlockHeroResp struct {
-	MessageBase
+	core.MessageBase
 	HeroId    string
 	HeroPower int64
 }
 
 // 角色名是否存在请求
 type RoleNameExistRequest struct {
-	MessageBase
+	core.MessageBase
 	Name string
 }
 
 // 角色名是否存在响应
 type RoleNameExistResponse struct {
-	MessageBase
+	core.MessageBase
 	Existed bool
 }

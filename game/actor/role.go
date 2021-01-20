@@ -1,12 +1,11 @@
-package game
+package actor
 
 import (
-	"actor-playground/config"
 	"actor-playground/core"
-	"actor-playground/msg"
-	"actor-playground/persis"
+	"actor-playground/core/persistence"
+	"actor-playground/game/config"
+	"actor-playground/game/msg"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"github.com/AsynkronIT/protoactor-go/router"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"sync"
@@ -24,16 +23,9 @@ type RoleState struct {
 	HeroList []string `json:"hero_list"`
 }
 
-var _ core.GameObjecter = (*S)(nil)
-
-type S struct {
-	core.GameObjecter
-}
-
 type Role struct {
 	*core.GameObject
-	state  *RoleState
-	heroes *actor.PID
+	state *RoleState
 }
 
 var _ core.GameObjecter = (*Role)(nil)
@@ -46,11 +38,9 @@ func NewRole() actor.Actor {
 
 func (r *Role) Receive(c actor.Context) {
 	switch m := c.Message().(type) {
-	case *msg.UpgradeHeroLv:
-		c.Forward(r.heroes)
 	case *msg.AddRoleExp:
 		r.AddExp(m.Exp)
-	case *persis.Snapshot:
+	case *persistence.ReplayComplete:
 		r.Recovery(c)
 		logrus.Infof("角色状态已恢复 RoleState: %+v\n", r.state)
 	case *msg.RegisterRoleRequest:
@@ -112,5 +102,4 @@ func (r *Role) Recovery(c actor.Context) {
 	for _, heroId := range r.state.HeroList {
 		pids = append(pids, core.SpawnGameObject(c, NewHero, heroId))
 	}
-	r.heroes = c.Spawn(router.NewConsistentHashGroup(pids...))
 }

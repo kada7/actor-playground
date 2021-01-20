@@ -1,9 +1,9 @@
-package game
+package actor
 
 import (
 	"actor-playground/core"
-	"actor-playground/event"
-	"actor-playground/msg"
+	"actor-playground/game/event"
+	"actor-playground/game/msg"
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 

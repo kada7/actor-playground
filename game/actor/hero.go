@@ -1,11 +1,10 @@
-package game
+package actor
 
 import (
 	"actor-playground/core"
-	"actor-playground/msg"
-	"actor-playground/persis"
+	"actor-playground/core/persistence"
+	"actor-playground/game/msg"
 	"github.com/AsynkronIT/protoactor-go/actor"
-	"log"
 )
 
 // 英雄状态
@@ -35,7 +34,7 @@ func NewHero() actor.Actor {
 
 func (h *Hero) Receive(c actor.Context) {
 	switch m := c.Message().(type) {
-	case *persis.Snapshot:
+	case *persistence.ReplayComplete:
 		h.Recovery(c)
 	case *msg.UnlockHeroRequest:
 		h.Unlock(c, m)
@@ -47,7 +46,7 @@ func (h *Hero) Receive(c actor.Context) {
 	}
 }
 
-// 初始化英雄
+// 解锁英雄
 func (h *Hero) Unlock(c actor.Context, m *msg.UnlockHeroRequest) {
 	*h.HeroState = HeroState{
 		Id:       c.Self().Id,
@@ -64,7 +63,6 @@ func (h *Hero) Unlock(c actor.Context, m *msg.UnlockHeroRequest) {
 func (h *Hero) Upgrade(lvNum int) {
 	h.Lv += lvNum
 	h.Power = h.CalcHeroPower()
-	log.Println("英雄Power已变更: ", h.Power)
 }
 
 // 重新计算英雄Power

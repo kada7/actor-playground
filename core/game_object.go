@@ -1,9 +1,8 @@
 package core
 
 import (
+	"actor-playground/core/inmem_persis"
 	"actor-playground/core/persistence"
-	"actor-playground/msg"
-	"actor-playground/persis"
 	"actor-playground/util"
 	"actor-playground/util/ctxlog"
 	"encoding/json"
@@ -13,7 +12,7 @@ import (
 type GameObjecter interface {
 	PersistState()
 	PersistMsg(msg interface{})
-	RecoveryState(s *persis.Snapshot)
+	RecoveryState(s *inmem_persis.Snapshot)
 	statePtr() interface{}
 }
 
@@ -33,14 +32,14 @@ func (g *GameObject) statePtr() interface{} {
 func (g *GameObject) PersistState() {
 	b, err := json.Marshal(g.sp)
 	util.Must(err)
-	g.PersistSnapshot(&persis.Snapshot{Data: b})
+	g.PersistSnapshot(&inmem_persis.Snapshot{Data: b})
 }
 
 func (g *GameObject) PersistMsg(msg interface{}) {
 	g.Mixin.PersistReceive(jsonMessage{msg})
 }
 
-func (g *GameObject) RecoveryState(s *persis.Snapshot) {
+func (g *GameObject) RecoveryState(s *inmem_persis.Snapshot) {
 	err := json.Unmarshal(s.Data, g.sp)
 	util.Must(err)
 }
@@ -55,7 +54,7 @@ func gameObjectProps(producer actor.Producer) *actor.Props {
 	return actor.PropsFromProducer(producer).
 		//WithContextDecorator(AutoPersis).
 		WithReceiverMiddleware(AutoPersisMiddleware).
-		WithReceiverMiddleware(persistence.Using(persis.ProviderInstance)).
+		WithReceiverMiddleware(persistence.Using(inmem_persis.ProviderInstance)).
 		WithReceiverMiddleware(LogMiddleware)
 }
 
@@ -80,11 +79,11 @@ func AutoPersis(next actor.ContextDecoratorFunc) actor.ContextDecoratorFunc {
 			return next(c)
 		}
 		c = next(c)
-		if m, ok := c.Message().(msg.Message); ok {
+		if m, ok := c.Message().(Message); ok {
 			g.PersistMsg(m)
 		}
 		switch m := c.Message().(type) {
-		case *persis.Snapshot:
+		case *inmem_persis.Snapshot:
 			ctxlog.Debugf(c, "恢复快照, data: %s", string(m.Data))
 			g.RecoveryState(m)
 		case *persistence.RequestSnapshot:
@@ -107,11 +106,11 @@ func AutoPersisMiddleware(next actor.ReceiverFunc) actor.ReceiverFunc {
 			return
 		}
 
-		if m, ok := envelope.Message.(msg.Message); ok {
+		if m, ok := envelope.Message.(Message); ok {
 			g.PersistMsg(m)
 		}
 		switch m := envelope.Message.(type) {
-		case *persis.Snapshot:
+		case *inmem_persis.Snapshot:
 			ctxlog.Debugf(c, "恢复快照, data: %s", string(m.Data))
 			g.RecoveryState(m)
 		case *persistence.RequestSnapshot:
