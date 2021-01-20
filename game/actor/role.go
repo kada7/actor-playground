@@ -14,11 +14,13 @@ import (
 
 // 角色状态
 type RoleState struct {
-	Id    string `json:"id"`
-	Lv    int    `json:"lv"`
-	Name  string `json:"name"`
-	Exp   int    `json:"exp"`
-	Power int64  `json:"power"`
+	Id     string `json:"id"`
+	Lv     int    `json:"lv"`
+	Name   string `json:"name"`
+	Exp    int    `json:"exp"`
+	Avatar int    `json:"avatar"` // 形象编号
+	Sex    uint   `json:"sex"`    // 性别：0女，1男
+	Power  int64  `json:"power"`
 	// 角色拥有的英雄ID列表
 	HeroList []string `json:"hero_list"`
 }
@@ -60,7 +62,6 @@ func (r *Role) Register(c actor.Context, m *msg.RegisterRoleRequest) {
 		Id:       c.Self().Id,
 		Lv:       1,
 		Name:     m.Name,
-		Exp:      0,
 		Power:    0,
 		HeroList: make([]string, 0),
 	}

@@ -6,6 +6,7 @@
 package inmem_persis
 
 import (
+	"actor-playground/core"
 	"actor-playground/core/persistence"
 	"actor-playground/util"
 	"encoding/json"
@@ -15,14 +16,6 @@ import (
 )
 
 var ProviderInstance = NewProvider(3)
-
-type Snapshot struct {
-	Data []byte
-}
-
-func (p *Snapshot) Reset()         {}
-func (p *Snapshot) ProtoMessage()  {}
-func (p *Snapshot) String() string { return string(p.Data) }
 
 type Provider struct {
 	state *providerState
@@ -81,7 +74,7 @@ func (p *Provider) getSnapshotData() map[string][]interface{} {
 			l = make([]interface{}, 0)
 		}
 		l = append(l, map[string]interface{}{
-			"snapshot": s.(*Snapshot).String(),
+			"snapshot": s.(*core.Snapshot).String(),
 			"idx":      idx,
 		})
 		m[actName] = l

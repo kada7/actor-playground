@@ -35,7 +35,6 @@ func (t *TestActor) SetupTest() {
 }
 
 func (t *TestActor) TestHeroUpgradeLv() {
-	//Register(persis.ProviderInstance.GetState())
 	pid := core.SpawnGameObject(t.rootContext, actor2.NewRoleCenter, "rolecenter")
 	resp, err := t.rootContext.RequestFuture(pid, &msg.RegisterRoleRequest{
 		Name:   "test_role_1",
