@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+message Event {
+  string state = 1;
+}
+
+message Snapshot {
+  string state = 1;
+}

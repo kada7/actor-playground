@@ -5,10 +5,11 @@
 
 package core
 
-type Snapshot struct {
-	Data []byte
-}
-
-func (p *Snapshot) Reset()         {}
-func (p *Snapshot) ProtoMessage()  {}
-func (p *Snapshot) String() string { return string(p.Data) }
+//
+//type Snapshot struct {
+//	Data []byte
+//}
+//
+//func (p *Snapshot) Reset()         {}
+//func (p *Snapshot) ProtoMessage()  {}
+//func (p *Snapshot) String() string { return string(p.Data) }

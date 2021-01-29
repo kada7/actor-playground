@@ -20,6 +20,14 @@ type HeroState struct {
 	BeautyBonusRate int64 `json:"beauty_bonus_rate"`
 }
 
+func (h HeroState) TableName() string {
+	return "hero"
+}
+
+func (h HeroState) PK() string {
+	return h.Id
+}
+
 type Hero struct {
 	*core.GameObject
 	*HeroState

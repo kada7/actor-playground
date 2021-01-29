@@ -13,6 +13,14 @@ type RoleCenterState struct {
 	RoleList []string `json:"registered_role"`
 }
 
+func (r RoleCenterState) TableName() string {
+	return "global"
+}
+
+func (r RoleCenterState) PK() string {
+	return "role_center"
+}
+
 // 角色中心，用于管理所有角色的数据
 type RoleCenter struct {
 	*core.GameObject

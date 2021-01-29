@@ -25,6 +25,14 @@ type RoleState struct {
 	HeroList []string `json:"hero_list"`
 }
 
+func (r RoleState) TableName() string {
+	return "role"
+}
+
+func (r RoleState) PK() string {
+	return r.Id
+}
+
 type Role struct {
 	*core.GameObject
 	state *RoleState

@@ -1,11 +1,12 @@
 package core
 
 import (
-	"actor-playground/core/inmem_persis"
+	"actor-playground/core/persis_provider"
 	"actor-playground/core/persistence"
+	"actor-playground/core/po"
+	"actor-playground/core/proto"
 	"actor-playground/util"
 	"actor-playground/util/ctxlog"
-	"encoding/json"
 	"github.com/AsynkronIT/protoactor-go/actor"
 )
 
@@ -19,7 +20,7 @@ type GameObjecter interface {
 	// 立刻持久化消息
 	PersistMsg(msg interface{})
 
-	recoveryState(s *Snapshot)
+	recoveryState(s *proto.Snapshot)
 	statePtr() interface{}
 }
 
@@ -29,32 +30,36 @@ type GameObjecter interface {
 // 所有游戏的Actor都要继承此游戏对象
 type GameObject struct {
 	persistence.Mixin
-	sp interface{}
+	_statePtr      po.PO
+	_stateDataInfo po.POInfo
 }
 
-func NewGameObject(state interface{}) *GameObject {
-	return &GameObject{sp: state}
+func NewGameObject(state po.PO) *GameObject {
+	return &GameObject{_statePtr: state}
+}
+
+func (g *GameObject) Name() string {
+	return po.POToActorName(g._statePtr)
 }
 
 func (g *GameObject) statePtr() interface{} {
-	return g.sp
+	return g._statePtr
 }
 
 // 立刻持久化状态
 func (g *GameObject) PersistState() {
-	b, err := json.Marshal(g.sp)
-	util.Must(err)
-	g.PersistSnapshot(&Snapshot{Data: b})
+	b := util.JsonMarshal(g._statePtr)
+	g.PersistSnapshot(&proto.Snapshot{State: b})
 }
 
 // 立刻持久化消息
 func (g *GameObject) PersistMsg(msg interface{}) {
-	g.Mixin.PersistReceive(jsonMessage{msg})
+	s := util.JsonMarshal(msg)
+	g.Mixin.PersistReceive(&proto.Event{State: s})
 }
 
-func (g *GameObject) recoveryState(s *Snapshot) {
-	err := json.Unmarshal(s.Data, g.sp)
-	util.Must(err)
+func (g *GameObject) recoveryState(s *proto.Snapshot) {
+	util.JsonUnmarshal(s.State, g._statePtr)
 }
 
 func SpawnGameObject(c actor.SpawnerContext, p actor.Producer, actorId string) *actor.PID {
@@ -66,7 +71,7 @@ func SpawnGameObject(c actor.SpawnerContext, p actor.Producer, actorId string) *
 func gameObjectProps(producer actor.Producer) *actor.Props {
 	return actor.PropsFromProducer(producer).
 		WithReceiverMiddleware(AutoPersisMiddleware).
-		WithReceiverMiddleware(persistence.Using(inmem_persis.ProviderInstance)).
+		WithReceiverMiddleware(persistence.Using(persis_provider.ProviderInstance)).
 		WithReceiverMiddleware(LogMiddleware)
 }
 
@@ -97,8 +102,8 @@ func AutoPersisMiddleware(next actor.ReceiverFunc) actor.ReceiverFunc {
 			g.PersistMsg(m)
 		}
 		switch m := envelope.Message.(type) {
-		case *Snapshot:
-			ctxlog.Debugf(c, "恢复快照, data: %s", string(m.Data))
+		case *proto.Snapshot:
+			ctxlog.Debugf(c, "恢复快照, state: %s", m.State)
 			g.recoveryState(m)
 		case *persistence.RequestSnapshot:
 			ctxlog.Debugf(c, "请求生成快照")
@@ -106,6 +111,8 @@ func AutoPersisMiddleware(next actor.ReceiverFunc) actor.ReceiverFunc {
 			ctxlog.Debugf(c, "快照生成完成")
 		case *persistence.ReplayComplete:
 			ctxlog.Debugf(c, "重放快照完成，当前state: %+v", g.statePtr())
+		case *actor.Stopping:
+			g.PersistState()
 		}
 		next(c, envelope)
 	}

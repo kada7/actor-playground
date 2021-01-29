@@ -11,6 +11,14 @@ type RoleNameSetState struct {
 	Set map[string]bool
 }
 
+func (r RoleNameSetState) TableName() string {
+	return "global"
+}
+
+func (r RoleNameSetState) PK() string {
+	return "role_name_set"
+}
+
 // 角色的名字集合
 type RoleNameSet struct {
 	*core.GameObject

@@ -6,6 +6,7 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -41,14 +42,15 @@ func Must(err error) {
 	}
 }
 
-func JsonMarshal(v interface{}) []byte {
+func JsonMarshal(v interface{}) string {
 	b, err := json.Marshal(v)
 	Must(err)
-	return b
+	return string(b)
 }
 
-func JsonUnmarshal(data []byte, v interface{}) {
-	err := json.Unmarshal(data, v)
+func JsonUnmarshal(s string, v interface{}) {
+	b := bytes.NewBufferString(s)
+	err := json.Unmarshal(b.Bytes(), v)
 	Must(err)
 }
 
