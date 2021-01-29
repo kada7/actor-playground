@@ -9,23 +9,40 @@ import (
 	"actor-playground/core/persistence"
 )
 
-//var ProviderInstance = newInMem()
-var ProviderInstance = newBolt()
+// 全局Provider实例
+var ProviderInstance = newInMem()
+
+//var ProviderInstance = newBolt("my.db")
 
 func newInMem() *Provider {
-	return NewProvider(persistence.NewInMemoryProvider(3))
+	return NewProvider(newInmemProviderState())
+}
+
+func newBolt(filename string) *Provider {
+	return NewProvider(newBoltProvider(filename))
+}
+
+// 自定义的ProviderState
+type MyProviderState interface {
+	persistence.ProviderState
+	// 所有的Actor名字
+	ActorNameList() []string
 }
 
 type Provider struct {
-	state persistence.ProviderState
+	state MyProviderState
 }
 
-func NewProvider(ps persistence.ProviderState) *Provider {
+func NewProvider(state MyProviderState) *Provider {
 	return &Provider{
-		state: ps,
+		state: state,
 	}
 }
 
 func (p *Provider) GetState() persistence.ProviderState {
 	return p.state
+}
+
+func (p *Provider) ActorNameList() []string {
+	return p.state.ActorNameList()
 }

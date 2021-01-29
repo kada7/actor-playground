@@ -38,8 +38,9 @@ func (t *TestActor) SetupTest() {
 
 func (t *TestActor) TearDownSuite() {
 	fmt.Printf("persistence: \n%s", ProviderString(persis_provider.ProviderInstance))
-	persis_provider.CloseDB()
-	//persis_provider.CleanBolt()
+	if inst, ok := persis_provider.ProviderInstance.GetState().(*persis_provider.BoltProviderState); ok {
+		inst.Close()
+	}
 }
 
 func (t *TestActor) TestJustRun() {
@@ -78,8 +79,7 @@ func getMessage(p *persis_provider.Provider) map[string][]interface{} {
 	m := map[string][]interface{}{}
 	//mutex := &sync.Mutex{}
 	//wg := &sync.WaitGroup{}
-	keys, err := persis_provider.GetAllKeys()
-	util.Must(err)
+	keys := p.ActorNameList()
 	for _, actName := range keys {
 		//wg.Add(1)
 		p.GetState().GetEvents(actName, 0, 0, func(e interface{}) {
@@ -100,8 +100,7 @@ func getMessage(p *persis_provider.Provider) map[string][]interface{} {
 
 func getSnapshotData(p *persis_provider.Provider) map[string][]interface{} {
 	m := map[string][]interface{}{}
-	keys, err := persis_provider.GetAllKeys()
-	util.Must(err)
+	keys := p.ActorNameList()
 	for _, actName := range keys {
 		s, idx, ok := p.GetState().GetSnapshot(actName)
 		if !ok {

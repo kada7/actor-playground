@@ -19,3 +19,13 @@
 
 [官方example](https://github.com/AsynkronIT/protoactor-go/tree/dev/_examples) ，
 建议clone到本地跑跑看。
+
+## 现状
+
+- 暂时实现了一个简单的游戏业务
+- protoactor-go内的persistence包不支持中间件，复制了一份persistence包到本项目内，
+  并支持了中间件
+- 准备尝试实现数据的持久化以及重放（暂时打算使用bolt的provider）
+- bolt的provider我fork了一份，之前的bolt-provider没维护了，有些兼容性问题。
+- 希望每个游戏业务的actor都通过组合一个GameObject基类来实现一整套游戏的通用功能，如持久化、重放等。
+  游戏业务开发人员不需要自己编写持久化的逻辑

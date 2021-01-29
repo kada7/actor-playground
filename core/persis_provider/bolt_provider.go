@@ -6,42 +6,47 @@
 package persis_provider
 
 import (
+	"actor-playground/core/persistence"
 	"actor-playground/util"
 	boltdb "github.com/artyomturkin/protoactor-go-persistence-boltdb"
 	"github.com/boltdb/bolt"
 	"os"
 )
 
-const boltFile = "my.db"
+type BoltProviderState struct {
+	filename string
+	db       *bolt.DB
+	persistence.ProviderState
+}
 
-var (
-	db *bolt.DB
-)
-
-func newBolt() *Provider {
-	var err error
-	db, err = bolt.Open(boltFile, 0666, nil)
+func newBoltProvider(filename string) *BoltProviderState {
+	db, err := bolt.Open(filename, 0666, nil)
 	util.Must(err)
-	return NewProvider(boltdb.NewBoltProvider(3, db))
+
+	return &BoltProviderState{
+		filename:      filename,
+		db:            db,
+		ProviderState: boltdb.NewBoltProvider(3, db),
+	}
 }
 
-func CloseDB() {
-	err := db.Close()
-	util.Must(err)
-}
-
-func CleanBolt() {
-	util.Must(os.Remove(boltFile))
-	util.Must(os.Remove(boltFile + ".lock"))
-}
-
-func GetAllKeys() ([]string, error) {
+func (b BoltProviderState) ActorNameList() []string {
 	l := make([]string, 0)
-	err := db.View(func(tx *bolt.Tx) error {
+	err := b.db.View(func(tx *bolt.Tx) error {
 		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
 			l = append(l, string(name))
 			return nil
 		})
 	})
-	return l, err
+	util.Must(err)
+	return l
+}
+
+func (b BoltProviderState) Close() {
+	err := b.db.Close()
+	util.Must(err)
+}
+
+func (b BoltProviderState) DropDB() {
+	util.Must(os.Remove(b.filename))
 }
